@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devs.devs.dao.RuleInfoMapper">
+  <resultMap id="BaseResultMap" type="com.devs.devs.dao.model.RuleInfoDO">
+    <id column="ID" jdbcType="BIGINT" property="id"/>
+    <result column="CREATE_TIME" jdbcType="TIMESTAMP" property="createTime"/>
+    <result column="UPDATE_TIME" jdbcType="TIMESTAMP" property="updateTime"/>
+    <result column="CODE" jdbcType="VARCHAR" property="code"/>
+    <result column="NAME" jdbcType="VARCHAR" property="name"/>
+    <result column="TYPE" jdbcType="VARCHAR" property="type"/>
+    <result column="MODEL_ID" jdbcType="VARCHAR" property="modelId"/>
+    <result column="JSON" jdbcType="OTHER" property="json"/>
+    <result column="DESC" jdbcType="VARCHAR" property="desc"/>
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    ID, CREATE_TIME, UPDATE_TIME, `CODE`, `NAME`, TYPE, MODEL_ID, `JSON`, `DESC`
+  </sql>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from rule_info
+    where ID = #{id,jdbcType=BIGINT}
+  </select>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete
+    from rule_info
+    where ID = #{id,jdbcType=BIGINT}
+  </delete>
+
+  <insert id="insert" keyColumn="ID" keyProperty="id" parameterType="com.devs.devs.dao.model.RuleInfoDO"
+          useGeneratedKeys="true">
+    insert into rule_info (CREATE_TIME, UPDATE_TIME, CODE, NAME, TYPE, MODEL_ID, JSON, `DESC`)
+    values (sysdate(), sysdate(), #{code,jdbcType=VARCHAR}, #{name,jdbcType=VARCHAR},
+            #{type,jdbcType=VARCHAR}, #{modelId,jdbcType=VARCHAR}, #{json,jdbcType=OTHER},
+            #{desc,jdbcType=VARCHAR})
+  </insert>
+
+  <insert id="insertSelective" keyColumn="ID" keyProperty="id" parameterType="com.devs.devs.dao.model.RuleInfoDO"
+          useGeneratedKeys="true">
+    insert into rule_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        CREATE_TIME,
+      </if>
+      <if test="updateTime != null">
+        UPDATE_TIME,
+      </if>
+      <if test="code != null">
+        CODE,
+      </if>
+      <if test="name != null">
+        NAME,
+      </if>
+      <if test="type != null">
+        TYPE,
+      </if>
+      <if test="modelId != null">
+        MODEL_ID,
+      </if>
+      <if test="json != null">
+        JSON,
+      </if>
+      <if test="desc != null">
+        DESC,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="code != null">
+        #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="modelId != null">
+        #{modelId,jdbcType=VARCHAR},
+      </if>
+      <if test="json != null">
+        #{json,jdbcType=OTHER},
+      </if>
+      <if test="desc != null">
+        #{desc,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.devs.devs.dao.model.RuleInfoDO">
+    update rule_info
+    <set>
+      <if test="createTime != null">
+        CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="code != null">
+        CODE = #{code,jdbcType=VARCHAR},
+      </if>
+      <if test="name != null">
+        NAME = #{name,jdbcType=VARCHAR},
+      </if>
+      <if test="type != null">
+        TYPE = #{type,jdbcType=VARCHAR},
+      </if>
+      <if test="modelId != null">
+        MODEL_ID = #{modelId,jdbcType=VARCHAR},
+      </if>
+      <if test="json != null">
+        JSON = #{json,jdbcType=OTHER},
+      </if>
+      <if test="desc != null">
+        DESC = #{desc,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where ID = #{id,jdbcType=BIGINT}
+  </update>
+
+  <update id="updateByPrimaryKey" parameterType="com.devs.devs.dao.model.RuleInfoDO">
+    update rule_info
+    set CREATE_TIME = #{createTime,jdbcType=TIMESTAMP},
+        UPDATE_TIME = #{updateTime,jdbcType=TIMESTAMP},
+        CODE   = #{code,jdbcType=VARCHAR},
+        NAME   = #{name,jdbcType=VARCHAR},
+        TYPE   = #{type,jdbcType=VARCHAR},
+        MODEL_ID    = #{modelId,jdbcType=VARCHAR},
+        JSON        = #{json,jdbcType=OTHER},
+        `DESC`      = #{desc,jdbcType=VARCHAR}
+    where ID = #{id,jdbcType=BIGINT}
+  </update>
+
+  <select id="selectByModelId" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from rule_info
+    where MODEL_ID = #{modelId}
+    <if test="type != null">
+      and TYPE = #{type}
+    </if>
+  </select>
+
+  <select id="list" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List"/>
+    from rule_info
+    where 1=1
+    <if test="beginTime != null">
+      AND UPDATE_TIME &gt;= #{beginTime}
+    </if>
+    <!-- 查询条件：创建结束时间 -->
+    <if test="endTime != null">
+      AND UPDATE_TIME &lt;= #{endTime}
+    </if>
+    <if test="code != null and code != ''">
+      AND CODE like "%"#{code}"%"
+    </if>
+    <if test="name != null and name != ''">
+      AND NAME like "%"#{name}"%"
+    </if>
+    <if test="type != null and type != ''">
+      AND TYPE = #{type}
+    </if>
+    <if test="modelId != null and modelId != ''">
+      AND MODEL_ID = #{modelId}
+    </if>
+  </select>
+
+
+</mapper>
