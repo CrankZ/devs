@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devs.devs.mapper.RuleResultMapper">
+    <resultMap id="BaseResultMap" type="com.devs.devs.valueobject.RuleResultDO">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="create_time" jdbcType="TIMESTAMP" property="createTime"/>
+        <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"/>
+        <result column="request_id" jdbcType="VARCHAR" property="requestId"/>
+        <result column="model_id" jdbcType="BIGINT" property="modelId"/>
+        <result column="rule_type" jdbcType="VARCHAR" property="ruleType"/>
+        <result column="rule_result" jdbcType="OTHER" property="ruleResult"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id
+        , create_time, update_time, request_id, model_id, rule_type, rule_result
+    </sql>
+</mapper>
