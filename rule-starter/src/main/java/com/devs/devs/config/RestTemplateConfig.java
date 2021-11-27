@@ -11,8 +11,8 @@ public class RestTemplateConfig {
     @Autowired
     private RestTemplateBuilder builder;
 
-    @Bean("commonRestTemplate")
-    public RestTemplate getCommonRestTemplate() {
+    @Bean("restTemplate")
+    public RestTemplate getRestTemplate() {
         return builder.build();
     }
 }

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devs.devs.mapper.RuleFieldDOMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.devs.devs.dataobject.RuleFieldDO">
+        <id column="id" property="id" />
+        <result column="ctime" property="ctime" />
+        <result column="mtime" property="mtime" />
+        <result column="deleted" property="deleted" />
+        <result column="field_code" property="fieldCode" />
+        <result column="field_name" property="fieldName" />
+        <result column="field_type" property="fieldType" />
+        <result column="field_source_type" property="fieldSource" />
+        <result column="field_source" property="fieldSource" />
+        <result column="field_desc" property="fieldDesc" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, ctime, mtime, deleted, field_code, field_name, field_type, field_source_type, field_source, field_desc
+    </sql>
+
+</mapper>

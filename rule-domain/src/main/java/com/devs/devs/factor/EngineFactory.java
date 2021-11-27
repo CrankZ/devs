@@ -1,19 +1,13 @@
 package com.devs.devs.factor;
 
-import com.alibaba.fastjson.JSON;
-import com.devs.devs.valueobject.RuleInfoDO;
-import com.devs.devs.valueobject.RuleRecordDO;
-import com.devs.devs.valueobject.RuleResultDO;
 import com.devs.devs.domain.executor.RuleExecutor;
-import com.devs.devs.domain.executor.TreeExecutor;
-import com.devs.devs.enums.RuleTypeEnum;
-import com.devs.devs.dto.engine.ExecuteRequest;
-import com.devs.devs.util.SaoUtils;
+import com.devs.devs.dto.engine.RuleEngineExecuteRequest;
+import com.devs.devs.executor.Creator;
+import com.devs.devs.util.SpringRestTemplate;
+import com.googlecode.aviator.AviatorEvaluatorInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author 松梁
@@ -22,61 +16,20 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Component
 public class EngineFactory {
     @Autowired
-    private SaoUtils saoUtils;
+    private SpringRestTemplate springRestTemplate;
 
     @Autowired
-    @Qualifier("asyncExecutor")
-    private ThreadPoolExecutor asyncExecutor;
+    private ApplicationContext applicationContext;
+    public static final AviatorEvaluatorInstance engine = Creator.getEngine();
 
-    public RuleExecutor create(ExecuteRequest request) {
-        String requestId = request.getRequestId();
-        Long sceneId = request.getSceneId();
-
-        RuleRecordDO ruleRecordDO = new RuleRecordDO()
-                .setRequestId(requestId)
-                .setSceneId(sceneId)
-                .setParam(JSON.toJSONString(request.getFacts()));
-
-        RuleResultDO ruleResultDO = new RuleResultDO()
-                .setRequestId(requestId)
-                .setSceneId(sceneId)
-                .setRuleType(RuleTypeEnum.SIMPLE.name());
-
-        RuleInfoDO ruleInfoDO = new RuleInfoDO();
-
+    public RuleExecutor create(RuleEngineExecuteRequest request) {
         return RuleExecutor.builder()
-                .ruleRecordDO(ruleRecordDO)
-                .ruleResultDO(ruleResultDO)
-                .ruleInfoDO(ruleInfoDO)
-
-                .saoUtils(saoUtils)
-                .asyncExecutor(asyncExecutor)
+                .templateId(request.getTemplateId())
+                .params(request.getParams())
+                .applicationContext(applicationContext)
+                .springRestTemplate(springRestTemplate)
+                .engine(engine)
                 .build();
     }
 
-    public TreeExecutor createTree(ExecuteRequest request) {
-        String requestId = request.getRequestId();
-        Long sceneId = request.getSceneId();
-
-        RuleRecordDO ruleRecordDO = new RuleRecordDO()
-                .setRequestId(requestId)
-                .setSceneId(sceneId)
-                .setParam(JSON.toJSONString(request.getFacts()));
-
-        RuleResultDO ruleResultDO = new RuleResultDO()
-                .setRequestId(requestId)
-                .setSceneId(sceneId)
-                .setRuleType(RuleTypeEnum.DECISION_TREE.name());
-
-        RuleInfoDO ruleInfoDO = new RuleInfoDO();
-
-        return TreeExecutor.builder()
-                .ruleRecordDO(ruleRecordDO)
-                .ruleResultDO(ruleResultDO)
-                .ruleInfoDO(ruleInfoDO)
-
-                .saoUtils(saoUtils)
-                .asyncExecutor(asyncExecutor)
-                .build();
-    }
 }

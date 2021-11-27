@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devs.devs.mapper.RuleResultDOMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.devs.devs.dataobject.RuleResultDO">
+        <id column="id" property="id" />
+        <result column="ctime" property="ctime" />
+        <result column="mtime" property="mtime" />
+        <result column="deleted" property="deleted" />
+        <result column="rule_id" property="ruleId" />
+        <result column="request" property="request" />
+        <result column="response" property="response" />
+        <result column="is_trigger" property="isTrigger" />
+        <result column="facts" property="facts" />
+        <result column="snapshot" property="snapshot" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, ctime, mtime, deleted, rule_id, request, response, is_trigger, facts, snapshot
+    </sql>
+
+</mapper>

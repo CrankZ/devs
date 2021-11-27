@@ -1,103 +1,121 @@
-# 字段表
-# TODO: 字段类型是编码还是序号？
+# CREATE DATABASE devs;
+# 规则模板（规则执行的粒度是模板）
+DROP TABLE IF EXISTS rule_template;
+CREATE TABLE rule_template
+(
+    id            bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime         DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime         DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted       INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    template_name varchar(32) NOT NULL DEFAULT '' COMMENT '字段名',
+    PRIMARY KEY (id)
+) COMMENT '模板表';
+insert into rule_template(template_name)
+values ('模板1');
+
+# 规则-模板映射表
+DROP TABLE IF EXISTS rule_template_map;
+CREATE TABLE rule_template_map
+(
+    id          bigint   NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime       DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted     INT      NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    template_id bigint   NOT NULL DEFAULT 0 COMMENT '模板id',
+    rule_id     bigint   NOT NULL DEFAULT 0 COMMENT '规则id',
+    PRIMARY KEY (id)
+) COMMENT '规则-模板映射表';
+insert into rule_template_map(template_id, rule_id)
+values (1, 1),
+       (1, 2),
+       (1, 3);
+
+# 基础字段
 DROP TABLE IF EXISTS rule_field;
 CREATE TABLE rule_field
 (
-    id           bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    create_time  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time  DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted      INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
-    field_status INT         NOT NULL DEFAULT 1 COMMENT '1上线,0下线',
-    field_code   varchar(32) NOT NULL COMMENT '字段编码',
-    field_name   varchar(32) NOT NULL COMMENT '字段名',
-    field_type   varchar(16) NOT NULL COMMENT '字段类型 字符串STRING,NUMBER数字',
-    field_source varchar(16) NOT NULL COMMENT '字段来源 入参PARAM；接口取数HTTP',
-    field_path   varchar(100) COMMENT '取数路径，入参来源则本字段为null',
-    field_desc   varchar(200) COMMENT '描述',
+    id                bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime             DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted           INT          NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    field_code        varchar(32)  NOT NULL DEFAULT '' COMMENT '字段编码',
+    field_name        varchar(32)  NOT NULL DEFAULT '' COMMENT '字段名',
+    field_type        varchar(16)  NOT NULL DEFAULT '' COMMENT '字段类型 字符串STRING,NUMBER数字',
+    field_source_type varchar(16)  NOT NULL DEFAULT '' COMMENT '字段来源 入参PARAM；接口HTTP；反射REFLECT',
+    field_source      varchar(100) NOT NULL DEFAULT '' COMMENT '取数地址',
+    field_desc        varchar(200) NOT NULL DEFAULT '' COMMENT '描述',
     PRIMARY KEY (id)
-) COMMENT '字段';
-create unique index uk_field_code on rule_field (field_code);
+) COMMENT '基础字段';
+insert into rule_field(field_code, field_name, field_type, field_source_type, field_source, field_desc)
+VALUES ('name', '姓名', 'STRING', 'REFLECT', 'engineServiceImpl#testReflect', ''),
+       ('age', '年龄', 'NUMBER', 'REFLECT', 'engineServiceImpl#testReflect', '');
 
-INSERT INTO rule_field (id, create_time, update_time, field_code, field_name, field_type, field_source, field_path, field_desc)
-VALUES ('age', '年龄', 'STRING', 'HTTP', 'https://www.xx.com/getAge', '');
-INSERT INTO rule_field (id, create_time, update_time, field_code, field_name, field_type, field_source, field_path, field_desc)
-VALUES ('name', '姓名', 'NUMBER', 'PARAM', null, '');
+# 单个条件
+DROP TABLE IF EXISTS rule_condition;
+CREATE TABLE rule_condition
+(
+    id             bigint        NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime          DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted        INT           NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    condition_name varchar(32)   NOT NULL COMMENT '条件名称',
+    condition_code varchar(32)   NOT NULL COMMENT '条件编码',
+    field_code     varchar(32)   NOT NULL COMMENT '字段编码',
+    operator       varchar(1024) NOT NULL COMMENT '比较符号',
+    expect         varchar(16)   NOT NULL COMMENT '期望值',
+    PRIMARY KEY (id)
+) COMMENT '规则条件';
+insert into rule_condition(condition_code, condition_name, field_code, operator, expect)
+values ('C_NAME_IS_ZS', '姓名是否等于张三', 'name', 'StringMethod.equals($EXPECT,$FACT)', '张三'),
+       ('C_AGE_GT18', '年龄是否大于18岁', 'age', 'NumberMethod.gt($EXPECT,$FACT)', '18');
 
-# 规则表
+# 规则
 DROP TABLE IF EXISTS rule_info;
 CREATE TABLE rule_info
 (
-    id          bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
-    rule_status INT         NOT NULL DEFAULT 0 COMMENT '1上线,0下线',
-    scene_id    bigint      NOT NULL COMMENT '规则所属场景',
-    rule_name   varchar(32) NOT NULL COMMENT '规则名',
-    rule_type   varchar(16) NOT NULL COMMENT '规则类型，1.规则集RULE_SET；2.决策树DECISION_TREE；3.评分卡SCORE_CARD',
-    rule_json   json        NOT NULL COMMENT '结构体',
-    rule_desc   varchar(16) NOT NULL COMMENT '规则备注',
+    id         bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime      DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted    INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    rule_name  varchar(32) NOT NULL DEFAULT '' COMMENT '规则名',
+    conditions varchar(32) NOT NULL DEFAULT '' COMMENT '条件组',
+    rule_desc  varchar(16) NOT NULL DEFAULT '' COMMENT '规则备注',
     PRIMARY KEY (id)
 ) COMMENT '规则信息';
+insert into rule_info(rule_name, conditions, rule_desc)
+values ('姓名是否等于张三', 'C_NAME_IS_ZS', ''),
+       ('年龄是否大于18岁', 'C_AGE_GT18', ''),
+       ('用户是否符合条件', 'C_NAME_IS_ZS && C_AGE_GT18', '');
 
-INSERT INTO rule_info (scene_id, rule_name, rule_type, rule_json, rule_desc)
-VALUES (1, '简单规则名称', 'SIMPLE', '{"desc":"备注","then":[{"type":"PRINT","value":"成功"}],"sceneId":"场景id","ruleName":"规则名称","otherwise":[{"type":"PRINT","value":"失败"}],"conditions":{"and":[{"or":[{"value":"李四","operator":"StringMethod.equals($1,$2)","fieldCode":"name"},{"value":10,"operator":"$1\u003e$2","fieldCode":"age"}]}]}}', '规则描述');
-
-# 场景
-DROP TABLE IF EXISTS rule_scene;
-CREATE TABLE rule_scene
-(
-    id          bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
-    scene_name  varchar(32) NOT NULL COMMENT '场景名',
-    PRIMARY KEY (id)
-);
-create unique index idx_scene_name on rule_scene (scene_name);
-
-INSERT INTO rule_scene (scene_name)
-values ('场景名称1');
-
-# 规则执行、触发记录表
-DROP TABLE IF EXISTS rule_record;
-CREATE TABLE rule_record
-(
-    id          bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
-    request_id  varchar(32) NOT NULL COMMENT '请求id',
-    scene_id    bigint      NOT NULL COMMENT '场景id',
-    param       json        NOT NULL COMMENT '入参',
-    PRIMARY KEY (id)
-) COMMENT '规则接口请求记录';
-
+# 规则执行结果
 DROP TABLE IF EXISTS rule_result;
 CREATE TABLE rule_result
 (
-    id          bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
-    deleted     INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
-    scene_id    bigint      NOT NULL COMMENT '场景id',
-    request_id  varchar(32) NOT NULL COMMENT '请求id',
-    rule_type   varchar(16) NOT NULL COMMENT '执行结果类型分开保存，规则类型：规则集RULE_SET；决策树DECISION_TREE；评分卡SCORE_CARD',
-    rule_result json        NOT NULL COMMENT '当时场景下所有规则的结构体，包括执行结果',
+    id         bigint       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime      DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted    INT          NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    rule_id    bigint       NOT NULL DEFAULT 0 COMMENT '规则ID',
+    request    varchar(100) NOT NULL DEFAULT '' COMMENT '执行入参',
+    response   varchar(100) NOT NULL DEFAULT '' COMMENT '执行出参',
+    is_trigger INT          NOT NULL DEFAULT 0 COMMENT '规则是否触发 0-未触发; 1-触发',
+    facts      varchar(32)  NOT NULL DEFAULT '' COMMENT '规则执行结果',
+    snapshot   varchar(32)  NOT NULL DEFAULT '' COMMENT '规则执行时的快照',
     PRIMARY KEY (id)
 ) COMMENT '规则执行结果';
 
-# 触发器表
-# TODO: 这个可以暂时先不做，完全解耦，触发操作交给用户
-DROP TABLE IF EXISTS trigger;
-CREATE TABLE trigger
+# TODO: 规则触发器
+DROP TABLE IF EXISTS rule_trigger;
+CREATE TABLE rule_trigger
 (
-    id              bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
-    create_time     datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time     datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    deleted         INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
-    trigger_name    varchar(32) NOT NULL COMMENT '触发器名',
-    trigger_type    varchar(16) NOT NULL COMMENT '触发器1.HTTP_GET2.HTTP_POST',
-    trigger_content varchar(16) NOT NULL COMMENT '触发器内容，一般为JSON（压缩后的）',
+    id            bigint      NOT NULL AUTO_INCREMENT COMMENT '主键',
+    ctime         DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    mtime         DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    deleted       INT         NOT NULL DEFAULT 0 COMMENT '是否删除 0-未删除; 1-已删除',
+    rule_id       bigint      NOT NULL DEFAULT 0 COMMENT '规则ID',
+    success_type  varchar(32) NOT NULL DEFAULT '' COMMENT '规则触发成功 执行的动作类型（HTTP，邮件，企业微信）',
+    success_value varchar(32) NOT NULL DEFAULT '' COMMENT '规则触发成功 内容',
+    failure_type  varchar(32) NOT NULL DEFAULT '' COMMENT '规则触发失败 执行的动作类型（HTTP，邮件，企业微信）',
+    failure_value varchar(32) NOT NULL DEFAULT '' COMMENT '规则触发失败 内容',
     PRIMARY KEY (id)
-);
+) COMMENT '规则触发器';

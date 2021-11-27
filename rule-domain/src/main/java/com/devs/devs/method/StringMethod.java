@@ -11,38 +11,43 @@ import java.util.List;
 @Import(ns = "StringMethod", scopes = {ImportScope.Static})
 public class StringMethod {
     /**
-     * 为空
+     * 直接输出内容
      *
-     * @param a
      * @return
      */
-    public static boolean empty(String a) {
-        return a.isEmpty();
+    public static Boolean print() {
+        return null;
+    }
+
+    /**
+     * 为空
+     *
+     * @param fact
+     * @return
+     */
+    public static Boolean isEmpty(String fact) {
+        return fact.isEmpty();
     }
 
     /**
      * 不为空
      *
-     * @param a
+     * @param fact
      * @return
      */
-    public static boolean notEmpty(String a) {
-        return !empty(a);
+    public static Boolean isNotEmpty(String fact) {
+        return !isEmpty(fact);
     }
 
     /**
      * 相等
-     *
-     * @param a
-     * @param b
-     * @return
      */
-    public static boolean equals(String a, String b) {
-        return a.equals(b);
+    public static Boolean equals(String expect, String fact) {
+        return expect.equals(fact);
     }
 
-    public static boolean notEquals(String a, String b) {
-        return !equals(a, b);
+    public static Boolean notEquals(String expect, String fact) {
+        return !equals(expect, fact);
     }
 
     /**
@@ -52,7 +57,7 @@ public class StringMethod {
      * @param b
      * @return
      */
-    public static boolean contains(String a, String b) {
+    public static Boolean contains(String a, String b) {
         return a.contains(b);
     }
 
@@ -63,7 +68,7 @@ public class StringMethod {
      * @param b
      * @return
      */
-    public static boolean notContains(String a, String b) {
+    public static Boolean notContains(String a, String b) {
         return a.contains(b);
     }
 
@@ -74,7 +79,7 @@ public class StringMethod {
      * @param b
      * @return
      */
-    public static boolean startWith(String a, String b) {
+    public static Boolean startWith(String a, String b) {
         return a.startsWith(b);
     }
 
@@ -85,7 +90,7 @@ public class StringMethod {
      * @param b
      * @return
      */
-    public static boolean notStartWith(String a, String b) {
+    public static Boolean notStartWith(String a, String b) {
         return !startWith(a, b);
     }
 
@@ -96,7 +101,7 @@ public class StringMethod {
      * @param list
      * @return
      */
-    public static boolean inList(String a, List<String> list) {
+    public static Boolean inList(String a, List<String> list) {
         return list.contains(a);
     }
 
@@ -107,7 +112,7 @@ public class StringMethod {
      * @param list
      * @return
      */
-    public static boolean notInList(String a, List<String> list) {
+    public static Boolean notInList(String a, List<String> list) {
         return list.contains(a);
     }
 }

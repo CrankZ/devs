@@ -1,11 +1,14 @@
 package com.devs.devs.engine.service;
 
 import com.devs.devs.ResultEntity;
-import com.devs.devs.dto.engine.ExecuteRequest;
+import com.devs.devs.dto.engine.RuleEngineExecuteRequest;
+import com.devs.devs.dto.engine.RuleEngineExecuteResponse;
+
+import java.util.Map;
 
 public interface IEngineService {
 
-    public ResultEntity executeRule(ExecuteRequest request);
+    ResultEntity<RuleEngineExecuteResponse> executeRule(RuleEngineExecuteRequest request);
 
-    public ResultEntity executeDecisionTree(ExecuteRequest request);
+    Map<String, Object> testReflect(Map<String, Object> properties);
 }

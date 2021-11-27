@@ -1,6 +1,6 @@
 import com.devs.devs.executor.Creator;
 import com.googlecode.aviator.AviatorEvaluatorInstance;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;

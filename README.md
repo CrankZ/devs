@@ -1,232 +1,155 @@
 # Devs
 
-Devs是一款功能齐全的规则引擎，支持规则集、决策树、评分卡，并且有完善的监控功能（开发中），后期打算支持规则回溯，时间窗口等等。规则形式以JSON格式保存，表达式引擎为[AviatorScript](https://github.com/killme2008/aviatorscript)，具体技术栈看下面。
+Devs是一款轻量级的规则引擎。
 
-# 技术栈
+# 基础概念
 
-- SpringBoot
-- Mybatis
-- MySQL（初始化脚本在src/main/resources/sql/init.sql）
-- [AviatorScript](https://github.com/killme2008/aviatorscript)
-- Ant Design Pro
+此规则引擎的基础概念有字段、条件、规则等。
 
-# 单个规则元素解释
+其中字段组成条件，条件组成规则，并且支持多个条件通过与或组成一个规则。下面用常见的代码说明各个概念
 
-![image-20210430114101159](README.assets/image-20210430114101159.png)
+## 代码举例
 
-单个规则的组成有3个基本元素
+![image-20211124163720495](README.assets/image-20211124163720495.png)
 
-1. condition：规则的条件，可配置多个条件
+## 规则分类
 
-2. then：规则触发成功后可触发多种动作，比如输出触发结果（true、false）,调用HTTP请求等等
+多个规则可组成一个模板，调用接口执行的时候是以模板为维度执行的。
 
-3. otherwise：规则触发失败也可执行多种动作，参考上面
+### 模板
 
-## condition组成元素
+| 模板名称 |
+| -------- |
+| 模板1    |
 
-![image-20210430111920262](README.assets/image-20210430111920262.png)
+### 规则模板映射表
 
-1. fact:真实取值，一般保存在数据库中，可通过反射或者HTTP请求获取
-2. operator: 条件运算符，不同字段类型有不同的运算符，比如数字类型的运算符有大于、小于等，字符串类型有包含、半包含等
-3. value:值，由用户输入，需要比较的值
+| 模板id | 规则id |
+| ------ | ------ |
+| 1      | 1      |
+| 1      | 2      |
+| 1      | 3      |
 
-## DSL
+## 规则相关
 
-本项目所有规则的保存统一用JSON格式
+### 字段
+
+| 字段名称 | 字段编码 | 字段类型 | 取数类型 | 取数路径                      |
+| -------- | -------- | -------- | -------- | ----------------------------- |
+| name     | 姓名     | STRING   | REFLECT  | engineServiceImpl#testReflect |
+| age      | 年龄     | NUMBER   | REFLECT  | engineServiceImpl#testReflect |
+
+### 条件
+
+| 条件名称         | 条件编码     | 字段编码 | 逻辑比较符                         | 期望值 |
+| ---------------- | ------------ | -------- | ---------------------------------- | ------ |
+| 姓名是否等于张三 | C_NAME_IS_ZS | name     | StringMethod.equals($EXPECT,$FACT) | 张三   |
+| 年龄是否大于18岁 | C_AGE_GT18   | age      | NumberMethod.gt($EXPECT,$FACT)     | 18     |
+
+### 规则
+
+| 规则名称         | 条件组                           |
+| ---------------- | -------------------------------- |
+| 姓名是否等于张三 | C_STRING_EQUALS1                 |
+| 年龄是否大于18岁 | C_NUMBER_GE1                     |
+| 用户是否符合条件 | C_STRING_EQUALS1 && C_NUMBER_GE1 |
+
+## 规则结果
+
+调用接口执行时，结果会直接通过接口返回。
+
+TODO: 保存规则执行结果
+
+TODO: 添加规则触发器
+
+# ER图
+
+## 模板-规则关系
+
+![image-20211127153727176](README.assets/image-20211127153727176.png)
+
+## 规则相关
+
+![image-20211127154540104](README.assets/image-20211127154540104.png)
+
+## 规则执行结果
+
+![image-20211127153808029](README.assets/image-20211127153808029.png)
+
+# 执行接口
+
+URL:/engine/execute
+
+METHOD:POST
+
+## 入参
+
+| 字段名     | 字段类型           | 是否必填 | 解释   |
+| :--------- | :----------------- | :------- | :----- |
+| templateId | Long               | TRUE     | 模板ID |
+| params     | Map<String,Object> | FALSE    | 参数   |
+
+### 例子
 
 ```json
 {
-  "conditions": {
-    "and": [
-      {
-        "fact": "age",
-        "operator": "$1>$2",
-        "value": 18
-      }
-    ]
+  "templateId": 1,
+  "params": {
+    "userId": 123
   }
 }
 ```
 
-## Action组成元素（then、otherwise）
+## 出参
 
-触发结果的动作（触发成功then，触发失败otherwise）统一抽象为Action
+验收结果只有是、否、NULL。
 
-### 触发动作类型目前分为一下几类
+执行结果为NULL，则只输出内容，需要手动判断
 
-- BOOL: true false
-- PRINT: 输出自定义字符串，输出支持添加变量
-- HTTP: 接口调用
-- STRUCT: 输出结构体，可供下级调用
+| 规则名称         | 执行结果 | 条件组                               | 实际取值                   |
+| ---------------- | -------- | ------------------------------------ | -------------------------- |
+| 姓名是否等于张三 | TRUE     | 姓名是否等于张三                     | "姓名": "张三"             |
+| 年龄是否大于18岁 | FALSE    | 年龄是否大于18岁                     | "年龄": 10                 |
+| 用户是否符合条件 | FALSE    | 姓名是否等于张三 && 年龄是否大于18岁 | "姓名": "张三", "年龄": 10 |
 
-### DSL
-
-```json
-"then or otherwise": [
-  {
-    "type": "PRINT",
-    "value": "你好"
-  },
-  {
-    "type": "HTTP",
-    "value": {
-      "url": "http://localhost:8888/action1",
-      "method": "POST",
-      "params": {
-        "k11": "v11",
-        "k12": "v12"
-      }
-    }
-  }
-]
-```
-
-## 完整DSL
-
-## DSL
+### 例子
 
 ```json
 {
-  "ruleName": "单个规则名称",
-  "desc": "单个规则备注",
-  "conditions": {
-    "and": [
+  "code": "0000",
+  "msg": "success",
+  "requestId": "",
+  "timestamp": 1637996239325,
+  "data": {
+    "templateId": 1,
+    "params": {},
+    "ruleResult": [
       {
-        "fact": "age",
-        "operator": "$1>$2",
-        "value": 18
+        "ruleName": "姓名是否等于张三",
+        "trigger": true,
+        "conditions": "姓名是否等于张三",
+        "facts": {
+          "姓名": "张三"
+        }
       },
       {
-        "fact": "name",
-        "operator": "StringMethod.equals($1,$2)",
-        "value": "李四"
+        "ruleName": "年龄是否大于18岁",
+        "trigger": false,
+        "conditions": "年龄是否大于18岁",
+        "facts": {
+          "年龄": 10
+        }
+      },
+      {
+        "ruleName": "用户是否符合条件",
+        "trigger": false,
+        "conditions": "姓名是否等于张三 && 年龄是否大于18岁",
+        "facts": {
+          "姓名": "张三",
+          "年龄": 10
+        }
       }
     ]
-  },
-  "then": [
-    {
-      "type": "PRINT",
-      "value": "你好"
-    },
-    {
-      "type": "HTTP",
-      "value": {
-        "url": "http://localhost:8888/action1",
-        "method": "POST",
-        "params": {
-          "k11": "v11",
-          "k12": "v12"
-        }
-      }
-    }
-  ],
-  "otherwise": [
-    {
-      "type": "HTTP",
-      "value": {
-        "url": "http://localhost:8888/action2",
-        "method": "GET",
-        "params": {
-          "k21": "v21",
-          "k22": "v22"
-        }
-      }
-    }
-  ]
+  }
 }
 ```
-
-# 支持类型与操作符
-
-## 数字
-
-- 相等
-- 大于
-- 小于
-- ...
-
-## 字符串
-
-- 相等
-- 包含
-- 半包含
-- ...
-
-## 日期
-
-- 相等
-- 取年月日
-- 获取分钟
-- 比较
-- ...
-
-# 支持多字段组合
-
-目前只支持相同类型的字段相组合
-
-## 数字
-
-加减乘除等
-
-## 字符串
-
-- 拼接
-- 删除
-
-## 日期
-
-相加，相减等
-
-# 模型
-
-上述单个规则是不能直接使用的，要放在规则集、决策树和评分卡中使用。
-
-# 规则集
-
-规则集由上述若干个规则组成，规则集属于**模型**
-
-## DSL
-
-```json
-{
-  "name": "规则集名称",
-  "code": "RS_1",
-  "modelId": "模型ID",
-  "remark": "备注",
-  "rules": [
-    {
-      "ruleName": "单个规则名称1",
-      "desc": "单个规则备注1",
-      "conditions": {},
-      "then": [],
-      "otherwise": []
-    },
-    {
-      "ruleName": "单个规则名称2",
-      "desc": "单个规则备注2",
-      "conditions": {},
-      "then": [],
-      "otherwise": []
-    } 
-  ]
-}
-```
-
-# 决策树
-
-![数据分类：决策树](README.assets/decision_tree_1.png)
-
-这个功能后端已经实现，但是由于没有界面，所以暂时从网上找了图片代替。
-
-单个规则只支持与或之前的组合，导致扩展性较低。所以引入决策树，支持多叉树
-
-# 评分卡
-
-类似下面这种，支持权重
-
-| 字段 | 操作符 | 权重 | 分数 |
-| ---- | ------ | ---- | ---- |
-| 年龄 | >18    | 1    | 1    |
-| <=18 | 2      | 1    | 2    |
-| 性别 | 男     | 3    | 3    |
-| 女   | 4      | 2    | 4    |

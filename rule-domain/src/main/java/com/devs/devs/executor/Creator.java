@@ -13,7 +13,6 @@ import com.googlecode.aviator.AviatorEvaluatorInstance;
  * @date 2021/7/22
  */
 public class Creator {
-
     private static AviatorEvaluatorInstance engine = AviatorEvaluator.newInstance();
 
     static {
